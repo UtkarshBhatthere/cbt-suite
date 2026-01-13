@@ -1,0 +1,380 @@
+cluster:
+  user: 'ubuntu'
+  tmp_dir: /home/ubuntu/tmp_stats_sweep_test/
+  head: '10.19.4.10'
+  clients: ['10.19.4.10', '10.19.4.11', '10.19.4.12', '10.19.4.13', '10.19.4.14', '10.19.4.15']
+  osds: ['10.19.4.10', '10.19.4.11', '10.19.4.12', '10.19.4.13', '10.19.4.14', '10.19.4.15']
+  mons: ['10.19.4.10', '10.19.4.11', '10.19.4.12', '10.19.4.13', '10.19.4.14', '10.19.4.15']
+  use_existing: True
+  rebuild_every_test: False
+  iterations: 1
+  pool_profiles:
+    rbd_nvme:
+      pg_size: 1024
+      pgp_size: 1024
+      replication: 3
+
+benchmarks:
+  librbdfio:
+    poolname: 'rbd'
+    time: 300
+    ramp: 30
+    volumes_per_client: 8
+    vol_size: 51200
+    pool_profile: "rbd_nvme"
+    log_avg_msec: 1000
+    log_iops: True
+    log_bw: True
+    log_lat: True
+    fio_out_format: "json"
+
+    prefill:
+      enabled: True
+      blocksize: "4M"
+      numjobs: 8
+
+    workloads:
+      # =========================================================
+      # PHASE 1: LATENCY FLOOR (Baseline)
+      # =========================================================
+      phase1_randwrite_4k_baseline:
+        jobname: "1_Latency_Baseline_RandWrite_4KB"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 1
+        numjobs: 1
+        procs_per_client: 1
+      phase1_randread_4k_baseline:
+        jobname: "1_Latency_Baseline_RandRead_4KB"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 1
+        numjobs: 1
+        procs_per_client: 1
+      phase1_randwrite_8k_baseline:
+        jobname: "1_Latency_Baseline_RandWrite_8KB"
+        mode: "randwrite"
+        op_size: 8192
+        iodepth: 1
+        numjobs: 1
+        procs_per_client: 1
+      phase1_randread_8k_baseline:
+        jobname: "1_Latency_Baseline_RandRead_8KB"
+        mode: "randread"
+        op_size: 8192
+        iodepth: 1
+        numjobs: 1
+        procs_per_client: 1
+
+      # =========================================================
+      # PHASE 2: LIGHT LOAD (Mixed Use)
+      # =========================================================
+      # --- 4K Writes ---
+      phase2_randwrite_4k_depth4_jobs1:
+        jobname: "2_Light_RandWrite_4KB_Depth4_Jobs1"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 4
+        numjobs: 1
+      phase2_randwrite_4k_depth8_jobs1:
+        jobname: "2_Light_RandWrite_4KB_Depth8_Jobs1"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 8
+        numjobs: 1
+      phase2_randwrite_4k_depth16_jobs1:
+        jobname: "2_Light_RandWrite_4KB_Depth16_Jobs1"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 16
+        numjobs: 1
+      phase2_randwrite_4k_depth4_jobs4:
+        jobname: "2_Light_RandWrite_4KB_Depth4_Jobs4"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 4
+        numjobs: 4
+      phase2_randwrite_4k_depth8_jobs4:
+        jobname: "2_Light_RandWrite_4KB_Depth8_Jobs4"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 8
+        numjobs: 4
+      phase2_randwrite_4k_depth16_jobs4:
+        jobname: "2_Light_RandWrite_4KB_Depth16_Jobs4"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 16
+        numjobs: 4
+
+      # --- 4K Reads ---
+      phase2_randread_4k_depth4_jobs1:
+        jobname: "2_Light_RandRead_4KB_Depth4_Jobs1"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 4
+        numjobs: 1
+      phase2_randread_4k_depth8_jobs1:
+        jobname: "2_Light_RandRead_4KB_Depth8_Jobs1"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 8
+        numjobs: 1
+      phase2_randread_4k_depth16_jobs1:
+        jobname: "2_Light_RandRead_4KB_Depth16_Jobs1"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 16
+        numjobs: 1
+      phase2_randread_4k_depth4_jobs4:
+        jobname: "2_Light_RandRead_4KB_Depth4_Jobs4"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 4
+        numjobs: 4
+      phase2_randread_4k_depth8_jobs4:
+        jobname: "2_Light_RandRead_4KB_Depth8_Jobs4"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 8
+        numjobs: 4
+      phase2_randread_4k_depth16_jobs4:
+        jobname: "2_Light_RandRead_4KB_Depth16_Jobs4"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 16
+        numjobs: 4
+
+      # --- 16K Writes ---
+      phase2_randwrite_16k_depth4_jobs1:
+        jobname: "2_Light_RandWrite_16KB_Depth4_Jobs1"
+        mode: "randwrite"
+        op_size: 16384
+        iodepth: 4
+        numjobs: 1
+      phase2_randwrite_16k_depth8_jobs1:
+        jobname: "2_Light_RandWrite_16KB_Depth8_Jobs1"
+        mode: "randwrite"
+        op_size: 16384
+        iodepth: 8
+        numjobs: 1
+      phase2_randwrite_16k_depth16_jobs1:
+        jobname: "2_Light_RandWrite_16KB_Depth16_Jobs1"
+        mode: "randwrite"
+        op_size: 16384
+        iodepth: 16
+        numjobs: 1
+      phase2_randwrite_16k_depth4_jobs4:
+        jobname: "2_Light_RandWrite_16KB_Depth4_Jobs4"
+        mode: "randwrite"
+        op_size: 16384
+        iodepth: 4
+        numjobs: 4
+      phase2_randwrite_16k_depth8_jobs4:
+        jobname: "2_Light_RandWrite_16KB_Depth8_Jobs4"
+        mode: "randwrite"
+        op_size: 16384
+        iodepth: 8
+        numjobs: 4
+      phase2_randwrite_16k_depth16_jobs4:
+        jobname: "2_Light_RandWrite_16KB_Depth16_Jobs4"
+        mode: "randwrite"
+        op_size: 16384
+        iodepth: 16
+        numjobs: 4
+
+      # --- 16K Reads ---
+      phase2_randread_16k_depth4_jobs1:
+        jobname: "2_Light_RandRead_16KB_Depth4_Jobs1"
+        mode: "randread"
+        op_size: 16384
+        iodepth: 4
+        numjobs: 1
+      phase2_randread_16k_depth8_jobs1:
+        jobname: "2_Light_RandRead_16KB_Depth8_Jobs1"
+        mode: "randread"
+        op_size: 16384
+        iodepth: 8
+        numjobs: 1
+      phase2_randread_16k_depth16_jobs1:
+        jobname: "2_Light_RandRead_16KB_Depth16_Jobs1"
+        mode: "randread"
+        op_size: 16384
+        iodepth: 16
+        numjobs: 1
+      phase2_randread_16k_depth4_jobs4:
+        jobname: "2_Light_RandRead_16KB_Depth4_Jobs4"
+        mode: "randread"
+        op_size: 16384
+        iodepth: 4
+        numjobs: 4
+      phase2_randread_16k_depth8_jobs4:
+        jobname: "2_Light_RandRead_16KB_Depth8_Jobs4"
+        mode: "randread"
+        op_size: 16384
+        iodepth: 8
+        numjobs: 4
+      phase2_randread_16k_depth16_jobs4:
+        jobname: "2_Light_RandRead_16KB_Depth16_Jobs4"
+        mode: "randread"
+        op_size: 16384
+        iodepth: 16
+        numjobs: 4
+
+      # =========================================================
+      # PHASE 3: HEAVY IOPS
+      # =========================================================
+      # --- Writes ---
+      phase3_randwrite_4k_depth64_jobs8:
+        jobname: "3_HeavyIOPS_RandWrite_4KB_Depth64_Jobs8"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 64
+        numjobs: 8
+      phase3_randwrite_4k_depth128_jobs8:
+        jobname: "3_HeavyIOPS_RandWrite_4KB_Depth128_Jobs8"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 128
+        numjobs: 8
+      phase3_randwrite_4k_depth256_jobs8:
+        jobname: "3_HeavyIOPS_RandWrite_4KB_Depth256_Jobs8"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 256
+        numjobs: 8
+      phase3_randwrite_4k_depth64_jobs16:
+        jobname: "3_HeavyIOPS_RandWrite_4KB_Depth64_Jobs16"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 64
+        numjobs: 16
+      phase3_randwrite_4k_depth128_jobs16:
+        jobname: "3_HeavyIOPS_RandWrite_4KB_Depth128_Jobs16"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 128
+        numjobs: 16
+      phase3_randwrite_4k_depth256_jobs16:
+        jobname: "3_HeavyIOPS_RandWrite_4KB_Depth256_Jobs16"
+        mode: "randwrite"
+        op_size: 4096
+        iodepth: 256
+        numjobs: 16
+
+      # --- Reads ---
+      phase3_randread_4k_depth64_jobs8:
+        jobname: "3_HeavyIOPS_RandRead_4KB_Depth64_Jobs8"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 64
+        numjobs: 8
+      phase3_randread_4k_depth128_jobs8:
+        jobname: "3_HeavyIOPS_RandRead_4KB_Depth128_Jobs8"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 128
+        numjobs: 8
+      phase3_randread_4k_depth256_jobs8:
+        jobname: "3_HeavyIOPS_RandRead_4KB_Depth256_Jobs8"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 256
+        numjobs: 8
+      phase3_randread_4k_depth64_jobs16:
+        jobname: "3_HeavyIOPS_RandRead_4KB_Depth64_Jobs16"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 64
+        numjobs: 16
+      phase3_randread_4k_depth128_jobs16:
+        jobname: "3_HeavyIOPS_RandRead_4KB_Depth128_Jobs16"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 128
+        numjobs: 16
+      phase3_randread_4k_depth256_jobs16:
+        jobname: "3_HeavyIOPS_RandRead_4KB_Depth256_Jobs16"
+        mode: "randread"
+        op_size: 4096
+        iodepth: 256
+        numjobs: 16
+
+      # =========================================================
+      # PHASE 4: HEAVY BANDWIDTH (Sequential)
+      # =========================================================
+      # --- Writes ---
+      phase4_seqwrite_4M_depth32_jobs4:
+        jobname: "4_HeavyBW_SeqWrite_4MB_Depth32_Jobs4"
+        mode: "write"
+        op_size: 4194304
+        iodepth: 32
+        numjobs: 4
+      phase4_seqwrite_4M_depth64_jobs4:
+        jobname: "4_HeavyBW_SeqWrite_4MB_Depth64_Jobs4"
+        mode: "write"
+        op_size: 4194304
+        iodepth: 64
+        numjobs: 4
+      phase4_seqwrite_4M_depth128_jobs4:
+        jobname: "4_HeavyBW_SeqWrite_4MB_Depth128_Jobs4"
+        mode: "write"
+        op_size: 4194304
+        iodepth: 128
+        numjobs: 4
+      phase4_seqwrite_4M_depth32_jobs8:
+        jobname: "4_HeavyBW_SeqWrite_4MB_Depth32_Jobs8"
+        mode: "write"
+        op_size: 4194304
+        iodepth: 32
+        numjobs: 8
+      phase4_seqwrite_4M_depth64_jobs8:
+        jobname: "4_HeavyBW_SeqWrite_4MB_Depth64_Jobs8"
+        mode: "write"
+        op_size: 4194304
+        iodepth: 64
+        numjobs: 8
+      phase4_seqwrite_4M_depth128_jobs8:
+        jobname: "4_HeavyBW_SeqWrite_4MB_Depth128_Jobs8"
+        mode: "write"
+        op_size: 4194304
+        iodepth: 128
+        numjobs: 8
+
+      # --- Reads ---
+      phase4_seqread_4M_depth32_jobs4:
+        jobname: "4_HeavyBW_SeqRead_4MB_Depth32_Jobs4"
+        mode: "read"
+        op_size: 4194304
+        iodepth: 32
+        numjobs: 4
+      phase4_seqread_4M_depth64_jobs4:
+        jobname: "4_HeavyBW_SeqRead_4MB_Depth64_Jobs4"
+        mode: "read"
+        op_size: 4194304
+        iodepth: 64
+        numjobs: 4
+      phase4_seqread_4M_depth128_jobs4:
+        jobname: "4_HeavyBW_SeqRead_4MB_Depth128_Jobs4"
+        mode: "read"
+        op_size: 4194304
+        iodepth: 128
+        numjobs: 4
+      phase4_seqread_4M_depth32_jobs8:
+        jobname: "4_HeavyBW_SeqRead_4MB_Depth32_Jobs8"
+        mode: "read"
+        op_size: 4194304
+        iodepth: 32
+        numjobs: 8
+      phase4_seqread_4M_depth64_jobs8:
+        jobname: "4_HeavyBW_SeqRead_4MB_Depth64_Jobs8"
+        mode: "read"
+        op_size: 4194304
+        iodepth: 64
+        numjobs: 8
+      phase4_seqread_4M_depth128_jobs8:
+        jobname: "4_HeavyBW_SeqRead_4MB_Depth128_Jobs8"
+        mode: "read"
+        op_size: 4194304
+        iodepth: 128
+        numjobs: 8

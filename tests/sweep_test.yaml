@@ -29,6 +29,7 @@ cluster:
 
 benchmarks:
   librbdfio:
+    poolname: 'rbd'
     # --- Global Defaults ---
     time: 300 # 5 Minutes per iteration
     ramp: 30 # 30s warmup to stabilize TCP/NVMe queues
