@@ -1,0 +1,47 @@
+default-base: ubuntu@24.04/stable
+applications:
+  microceph:
+    charm: microceph
+    channel: squid/stable
+    revision: 181
+    num_units: 6
+    to:
+    - "17"
+    - "18"
+    - "19"
+    - "24"
+    - "25"
+    - "26"
+    options:
+      snap-channel: latest/edge/tentacle
+    constraints: arch=amd64 tags=compute
+    bindings:
+      "": oam-space
+      admin: oam-space
+      ceph: oam-space
+      ceph-nfs: public-space
+      ceph-rgw-ready: oam-space
+      cluster: ceph-replica-space
+      cos-agent: oam-space
+      identity-service: oam-space
+      mds: oam-space
+      peers: oam-space
+      public: ceph-access-space
+      radosgw: oam-space
+      receive-ca-cert: oam-space
+      remote-provider: oam-space
+      remote-requirer: oam-space
+      traefik-route-rgw: oam-space
+machines:
+  "17":
+    constraints: arch=amd64 tags=compute
+  "18":
+    constraints: arch=amd64 tags=compute
+  "19":
+    constraints: arch=amd64 tags=compute
+  "24":
+    constraints: arch=amd64 tags=compute
+  "25":
+    constraints: arch=amd64 tags=compute
+  "26":
+    constraints: arch=amd64 tags=compute
