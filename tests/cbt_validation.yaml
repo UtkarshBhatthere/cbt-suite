@@ -1,17 +1,17 @@
 cluster:
   user: 'ubuntu'
-  tmp_dir: /tmp/cbt
-  head: '10.19.4.13'                        # The node you are running this command on
-  clients: ['10.19.4.13']                  # Use just one client for validation
-  osds: ['10.19.4.10', '10.19.4.11', '10.19.4.12']
-  mons: ['10.19.4.10', '10.19.4.11', '10.19.4.12']
+  tmp_dir: /home/ubuntu/cbt_validation/
+  head: '10.19.4.10'
+  clients: ['10.19.4.10', '10.19.4.11', '10.19.4.12', '10.19.4.13', '10.19.4.14', '10.19.4.15']
+  osds: ['10.19.4.10', '10.19.4.11', '10.19.4.12', '10.19.4.13', '10.19.4.14', '10.19.4.15']
+  mons: ['10.19.4.10', '10.19.4.11', '10.19.4.12', '10.19.4.13', '10.19.4.14', '10.19.4.15']
   use_existing: True
   rebuild_every_test: False
   iterations: 1
   pool_profiles:
-    rbd:
-      pg_size: 256
-      pgp_size: 256
+    validation:
+      pg_size: 8
+      pgp_size: 8
 
 benchmarks:
   librbdfio:
@@ -19,10 +19,9 @@ benchmarks:
     vol_size: 1024          # Create a tiny 1GB RBD image
     mode: ['write', 'randwrite']     # Test random writes
     op_size: [4096]         # 4KB block size
-    iodepth: [16]           # Queue depth 16
+    iodepth: [1]            # Queue depth 1
     procs_per_node: 1       # 1 FIO process per client
-    
-    pool_profile: 'rbd'
+    pool_profile: 'validation'
     log_avg_msec: 1000
  
   radosbench:
@@ -30,6 +29,6 @@ benchmarks:
     op_size: [4096]
     write_only: True
     concurrent_procs: 1
-    concurrent_ops: [16]
-    pool_profile: 'rbd'
+    concurrent_ops: [1]
+    pool_profile: 'validation'
 
