@@ -15,12 +15,15 @@ cluster:
       replication: 3
 
 # =========================================================
-# MONITORING PROFILES
+# MONITORING PROFILES with perf profiliing (for flame graphs)
 # =========================================================
 monitoring_profiles:
   collectl:
     every: 5
     args: '-s cdn'
+  
+  perf:
+    args: 'record -g -a -F 99'
 
 benchmarks:
   librbdfio:
