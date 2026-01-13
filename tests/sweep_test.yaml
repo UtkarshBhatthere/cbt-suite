@@ -1,28 +1,31 @@
 cluster:
-  user: "ubuntu"
-  head: "10.19.4.13"
-  tmp_dir: "/tmp/cbt"
-  # 6-Node Cluster
-  clients:
-    [
-      "10.19.4.10",
-      "10.19.4.11",
-      "10.19.4.12",
-      "10.19.4.13",
-      "10.19.4.14",
-      "10.19.4.15",
-    ]
-  osds:
-    [
-      "10.19.4.10",
-      "10.19.4.11",
-      "10.19.4.12",
-      "10.19.4.13",
-      "10.19.4.14",
-      "10.19.4.15",
-    ]
-  mons: ["10.19.4.10", "10.19.4.11", "10.19.4.12"]
+  user: 'ubuntu'
+  tmp_dir: /home/ubuntu/tmp_stats_sweep_test/
+  head: '10.19.4.10'
+  clients: ['10.19.4.10', '10.19.4.11', '10.19.4.12', '10.19.4.13', '10.19.4.14', '10.19.4.15']
+  osds: ['10.19.4.10', '10.19.4.11', '10.19.4.12', '10.19.4.13', '10.19.4.14', '10.19.4.15']
+  mons: ['10.19.4.10', '10.19.4.11', '10.19.4.12', '10.19.4.13', '10.19.4.14', '10.19.4.15']
   use_existing: True
+  rebuild_every_test: False
+  iterations: 1
+  pool_profiles:
+    rbd_nvme:
+      pg_size: 1024
+      pgp_size: 1024
+      replication: 3
+
+# =========================================================
+# TEST SWEEP TIMELINE OVERVIEW
+# Phase 1 (Baseline): 2 modes × 2 sizes × 1 depth × 1 job = 4 tests
+# 
+# Phase 2 (Light Load): 2 modes × 2 sizes × 3 depths × 2 jobs = 24 tests
+# 
+# Phase 3 (Heavy IOPS): 2 modes × 1 size × 3 depths × 2 jobs = 12 tests
+# 
+# Phase 4 (Heavy BW): 2 modes × 1 size × 3 depths × 2 jobs = 12 tests
+# 
+# Grand Total: 52 unique test iterations. Total Benchmark Time: 52×330s≈17,160s≈4.7 hours
+# =========================================================
 
 benchmarks:
   librbdfio:
@@ -111,11 +114,3 @@ benchmarks:
         # 8 jobs * 128 depth * 4MB = ~4GB RAM per process chain.
         # Safe on your 3TB nodes.
         numjobs: [4, 8]
-
-pool_profiles:
-  rbd_nvme:
-    # 4096 PGs to ensure perfect distribution across your NVMe array
-    pg_size: 4096
-    pgp_size: 4096
-    replication: 3
-    application: "rbd"
