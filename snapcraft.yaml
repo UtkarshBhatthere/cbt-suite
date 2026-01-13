@@ -1,0 +1,178 @@
+name: cbt
+base: core22
+version: '1.0'
+summary: Ceph Benchmarking Tool
+description: |
+  CBT (Ceph Benchmarking Tool) is a benchmarking framework for Ceph storage clusters.
+  It orchestrates distributed benchmarks across multiple nodes using tools like fio,
+  rados bench, and rbd bench. This snap packages CBT with all required dependencies
+  including Ceph clients, fio, pdsh, and Python modules.
+
+grade: stable
+confinement: classic
+
+architectures:
+  - build-on: amd64
+
+parts:
+  python-runtime:
+    plugin: nil
+    stage-packages:
+      - python3
+      - python3-minimal
+      - python3.10
+      - python3.10-minimal
+      - libpython3.10-stdlib
+      - libpython3.10-minimal
+
+  python-deps:
+    plugin: nil
+    after: [python-runtime]
+    stage-packages:
+      - python3-numpy
+      - python3-scipy
+      - python3-pandas
+      - python3-matplotlib
+      - python3-requests
+      - python3-yaml
+      - python3-jinja2
+      - python3-lxml
+
+  ceph-tools:
+    plugin: nil
+    stage-packages:
+      - ceph-common
+      - librados2
+      - libradosstriper1
+      - librbd1
+      - libcephfs2
+
+  benchmark-tools:
+    plugin: nil
+    stage-packages:
+      - pdsh
+      - fio
+      - gnuplot
+    override-stage: |
+      craftctl default
+      # Fix pdsh wrapper to use snap paths
+      sed -i 's|/usr/bin/pdsh.bin|$SNAP/usr/bin/pdsh.bin|g' usr/bin/pdsh
+      sed -i 's|/usr/bin/pdsh.bin|$SNAP/usr/bin/pdsh.bin|g' usr/bin/pdcp
+      sed -i 's|/usr/bin/pdsh.bin|$SNAP/usr/bin/pdsh.bin|g' usr/bin/rpdcp
+
+  system-utils:
+    plugin: nil
+    stage-packages:
+      - bc
+      - jq
+      - perl
+      - numactl
+      - iproute2
+      - rsync
+      - openssh-client
+      - libaio1
+      - libnuma1
+      - libssl3
+      - zlib1g
+      - libzstd1
+      - libncurses6
+      - libreadline8
+
+  command-chain:
+    plugin: dump
+    source: snap/local
+    organize:
+      command-chain.sh: bin/command-chain.sh
+
+  cbt:
+    plugin: dump
+    source: https://github.com/ceph/cbt.git
+    source-type: git
+    override-build: |
+      craftctl default
+      mkdir -p "$CRAFT_PART_INSTALL/bin"
+      echo '#!/bin/bash' > "$CRAFT_PART_INSTALL/bin/cbt"
+      echo 'export PYTHONHOME="$SNAP/usr"' >> "$CRAFT_PART_INSTALL/bin/cbt"
+      echo 'export PYTHONPATH="$SNAP/usr/lib/python3/dist-packages${PYTHONPATH:+:$PYTHONPATH}"' >> "$CRAFT_PART_INSTALL/bin/cbt"
+      echo 'exec "$SNAP/usr/bin/python3" "$SNAP/cbt.py" "$@"' >> "$CRAFT_PART_INSTALL/bin/cbt"
+      chmod +x "$CRAFT_PART_INSTALL/bin/cbt"
+    after:
+      - python-runtime
+      - python-deps
+      - ceph-tools
+      - benchmark-tools
+      - system-utils
+
+apps:
+  cbt:
+    command: bin/cbt
+    command-chain:
+      - bin/command-chain.sh
+    environment:
+      PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/bin:$PATH
+      LD_LIBRARY_PATH: $SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/lib:$LD_LIBRARY_PATH
+      PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+      PDSH_RCMD_TYPE: ssh
+      PDSH_SSH_ARGS: "-oBatchMode=yes -oStrictHostKeyChecking=accept-new"
+      PDSH_MODULE_DIR: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pdsh
+
+  pdsh:
+    command: usr/bin/pdsh
+    command-chain:
+      - bin/command-chain.sh
+    environment:
+      PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/bin:$PATH
+      LD_LIBRARY_PATH: $SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/lib:$LD_LIBRARY_PATH
+      PDSH_RCMD_TYPE: ssh
+      PDSH_SSH_ARGS: "-oBatchMode=yes -oStrictHostKeyChecking=accept-new"
+      PDSH_MODULE_DIR: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pdsh
+
+  pdcp:
+    command: usr/bin/pdcp
+    command-chain:
+      - bin/command-chain.sh
+    environment:
+      PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/bin:$PATH
+      LD_LIBRARY_PATH: $SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/lib:$LD_LIBRARY_PATH
+      PDSH_MODULE_DIR: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pdsh
+
+  rpdcp:
+    command: usr/bin/rpdcp
+    command-chain:
+      - bin/command-chain.sh
+    environment:
+      PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/bin:$PATH
+      LD_LIBRARY_PATH: $SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/lib:$LD_LIBRARY_PATH
+      PDSH_MODULE_DIR: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pdsh
+
+  fio:
+    command: usr/bin/fio
+    command-chain:
+      - bin/command-chain.sh
+    environment:
+      PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/bin:$PATH
+      LD_LIBRARY_PATH: $SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/lib:$LD_LIBRARY_PATH
+
+  rados:
+    command: usr/bin/rados
+    command-chain:
+      - bin/command-chain.sh
+    environment:
+      PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/bin:$PATH
+      LD_LIBRARY_PATH: $SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/lib:$LD_LIBRARY_PATH
+
+  rbd:
+    command: usr/bin/rbd
+    command-chain:
+      - bin/command-chain.sh
+    environment:
+      PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/bin:$PATH
+      LD_LIBRARY_PATH: $SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/lib:$LD_LIBRARY_PATH
+
+  radosgw-admin:
+    command: usr/bin/radosgw-admin
+    command-chain:
+      - bin/command-chain.sh
+    environment:
+      PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/bin:$PATH
+      LD_LIBRARY_PATH: $SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/lib:$LD_LIBRARY_PATH

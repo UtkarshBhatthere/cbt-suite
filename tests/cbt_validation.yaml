@@ -1,0 +1,35 @@
+cluster:
+  user: 'ubuntu'
+  tmp_dir: /tmp/cbt
+  head: '10.19.4.13'                        # The node you are running this command on
+  clients: ['10.19.4.13']                  # Use just one client for validation
+  osds: ['10.19.4.10', '10.19.4.11', '10.19.4.12']
+  mons: ['10.19.4.10', '10.19.4.11', '10.19.4.12']
+  use_existing: True
+  rebuild_every_test: False
+  iterations: 1
+  pool_profiles:
+    rbd:
+      pg_size: 256
+      pgp_size: 256
+
+benchmarks:
+  librbdfio:
+    time: 30                # Run for only 30 seconds
+    vol_size: 1024          # Create a tiny 1GB RBD image
+    mode: ['write', 'randwrite']     # Test random writes
+    op_size: [4096]         # 4KB block size
+    iodepth: [16]           # Queue depth 16
+    procs_per_node: 1       # 1 FIO process per client
+    
+    pool_profile: 'rbd'
+    log_avg_msec: 1000
+ 
+  radosbench:
+    time: 30
+    op_size: [4096]
+    write_only: True
+    concurrent_procs: 1
+    concurrent_ops: [16]
+    pool_profile: 'rbd'
+

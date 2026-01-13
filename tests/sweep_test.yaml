@@ -1,0 +1,121 @@
+cluster:
+  user: "ubuntu"
+  head: "10.19.4.13"
+  tmp_dir: "/tmp/cbt"
+  # 6-Node Cluster
+  clients:
+    [
+      "10.19.4.10",
+      "10.19.4.11",
+      "10.19.4.12",
+      "10.19.4.13",
+      "10.19.4.14",
+      "10.19.4.15",
+    ]
+  osds:
+    [
+      "10.19.4.10",
+      "10.19.4.11",
+      "10.19.4.12",
+      "10.19.4.13",
+      "10.19.4.14",
+      "10.19.4.15",
+    ]
+  mons: ["10.19.4.10", "10.19.4.11", "10.19.4.12"]
+  use_existing: True
+
+benchmarks:
+  librbdfio:
+    # --- Global Defaults ---
+    time: 300 # 5 Minutes per iteration
+    ramp: 30 # 30s warmup to stabilize TCP/NVMe queues
+
+    # VOLUME CONFIG
+    # 8 Volumes per client = 48 Total Active Images.
+    # Spreads load across all OSDs/PGs to prevent artificial hotspots.
+    volumes_per_client: 8
+    vol_size: 51200 # 50GB per volume (~2.4TB Total Dataset)
+    pool_profile: "rbd_nvme"
+
+    # LOGGING (Crucial for Analysis)
+    log_avg_msec: 1000 # 1s resolution
+    log_iops: True
+    log_bw: True
+    log_lat: True
+    fio_out_format: "json"
+
+    # --- Prefill (Mandatory) ---
+    prefill:
+      enabled: True
+      blocksize: "4M"
+      numjobs: 8 # Parallel prefill to save time
+
+    # --- THE UNBIASED MATRIX ---
+    workloads:
+      # =========================================================
+      # PHASE 1: THE LATENCY FLOOR (Sync/Database Simulation)
+      # Metric: Latency (ms)
+      # Question: "How fast is a single commit?"
+      # =========================================================
+      baseline_latency:
+        jobname: "1_latency_floor"
+        mode: ["randwrite", "randread"] # Test both R and W
+        op_size: [4096, 8192] # 4K (Standard), 8K (Postgres Page)
+        iodepth: [1] # STRICTLY 1
+        numjobs: [1] # STRICTLY 1 process per client
+        procs_per_client: [1]
+
+      # =========================================================
+      # PHASE 2: LIGHT-MIXED LOAD (Standard VM/App Simulation)
+      # Metric: Latency vs IOPS balance
+      # Question: "How does it handle normal traffic?"
+      # =========================================================
+      light_load:
+        jobname: "2_light_load"
+        mode: ["randwrite", "randread"]
+        op_size: [4096, 16384] # 4K and 16K (MySQL Page)
+        iodepth: [4, 8, 16] # Shallow queues
+        numjobs: [1, 4] # Low concurrency
+
+      # =========================================================
+      # PHASE 3: HEAVY IOPS (NVMe/CPU Stress)
+      # Metric: Max IOPS
+      # Question: "Can we hit 2 Million+ IOPS?"
+      # =========================================================
+      heavy_iops:
+        jobname: "3_heavy_iops"
+        mode: ["randwrite", "randread"]
+        op_size: [4096] # Small block only
+        iodepth: [64, 128, 256] # Deep queues to saturate NVMe
+
+        # SCALING:
+        # 16 jobs * 8 volumes = 128 threads per node.
+        # Cluster Total: 768 concurrent threads.
+        numjobs: [8, 16]
+
+      # =========================================================
+      # PHASE 4: HEAVY BANDWIDTH (100Gb Stress)
+      # Metric: Max Throughput (GB/s)
+      # Question: "Can we fill the 100Gb pipe?"
+      # =========================================================
+      heavy_bw:
+        jobname: "4_heavy_bw"
+        mode: ["write", "read"] # Sequential is best for BW
+        op_size: [4194304] # 4MB Jumbo Blocks
+
+        # UNBIASED DEPTHS:
+        # 32 (Standard), 64 (High), 128 (Extreme)
+        iodepth: [32, 64, 128]
+
+        # MEMORY WARNING:
+        # 8 jobs * 128 depth * 4MB = ~4GB RAM per process chain.
+        # Safe on your 3TB nodes.
+        numjobs: [4, 8]
+
+pool_profiles:
+  rbd_nvme:
+    # 4096 PGs to ensure perfect distribution across your NVMe array
+    pg_size: 4096
+    pgp_size: 4096
+    replication: 3
+    application: "rbd"
