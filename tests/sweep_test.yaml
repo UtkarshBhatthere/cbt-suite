@@ -19,8 +19,7 @@ cluster:
 # =========================================================
 monitoring_profiles:
   collectl:
-    every: 5
-    args: '-s cdn'
+    args: '-sCDN -i 5 --rawdskfilt "+nvme[0-9]n[0-9]+" -P -oD -f {collectl_dir}'
 
 benchmarks:
   librbdfio:
